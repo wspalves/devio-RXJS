@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, UnsubscriptionError } from 'rxjs';
+import { User } from './user';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,24 @@ export class AppComponent implements OnInit {
     this.myObservable('Wesley').subscribe({
       next: (result) => console.log(result),
       error: (error) => console.log(error),
+      complete: () => console.log('Completed!'),
     });
+
+    const observer = {
+      next: (value: any) => console.log('Sucess: ', value),
+      error: (error: any) => console.log('Erro: ', error),
+      complete: () => console.log('End.'),
+    };
+
+    const obs = this.myObservable('Wesley');
+    obs.subscribe(observer);
+
+    const userObs = this.userObservable('Admin', 'admin@g.com');
+    const userSubs = userObs.subscribe(observer);
+
+    setTimeout(() => {
+      userSubs.unsubscribe();
+    }, 3000);
   }
 
   myPromise(name: string): Promise<string> {
@@ -47,6 +65,36 @@ export class AppComponent implements OnInit {
       setTimeout(() => {
         subscriber.next('Observable - Olá com delay!');
       }, 1000);
+
+      subscriber.complete();
+    });
+  }
+
+  userObservable(name: string, email: string): Observable<User> {
+    return new Observable((subscriber) => {
+      if (name == 'Admin') {
+        let user = new User(name, email);
+
+        setTimeout(() => {
+          subscriber.next(user);
+        }, 1000);
+
+        setTimeout(() => {
+          subscriber.next(user);
+        }, 2000);
+
+        setTimeout(() => {
+          subscriber.next(user);
+        }, 3000);
+
+        setTimeout(() => {
+          subscriber.next(user);
+        }, 4000);
+
+        setTimeout(() => {
+          subscriber.complete();
+        }, 5000);
+      }
     });
   }
 }
